@@ -37,9 +37,9 @@ namespace Jellyfish.EventsAggregator
         private IStreamDiscovery CreateStreamDiscovery(HttpRequest request)
         {
             var streams = request.Query["streams"];
-            if( streams != null)
+            if( streams != null && streams.FirstOrDefault() != null)
             {
-                return new StaticStreamDiscovery(streams.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(uri=>uri.Trim()));
+                return new StaticStreamDiscovery(streams.First().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(uri=>uri.Trim()));
             }
 
             return new EtcdStreamDiscovery();
