@@ -44,31 +44,30 @@ namespace Jellyfish.EventsAggregator
             return _items;
         }
 
-        private static void VisitObject(JObject jobj)
+        private static void VisitObject(JObject jobj, bool isVersion=false)
         {
             // Check status before parsing properties to don't care of properties order
-            var enabled = jobj.Property("status"); // only for version
-            if( enabled != null)
-                _versionEnabled = enabled.Value.ToString() != "0";
-
+            if( isVersion) {
+                _versionEnabled = jobj.Property("Enabled")?.Value?.ToString() != "True";
+            }
             foreach (var property in jobj.Properties())
             {
                 VisitProperty(property);
             }
         }
 
-        private static void VisitArray(JArray array, bool isInstance=false)
+        private static void VisitArray(JArray array, string elemType=null)
         {
             for (var index = 0; index < array.Count; index++)
             {
-                if (isInstance)
+                if (elemType == "Instances")
                 {
                     _current = new Item { Enabled = _versionEnabled };
                     _items.Add(_current);
                 }
 
                 var data = array[index];
-                VisitObject(data.Value<JObject>());
+                VisitObject(data.Value<JObject>(), elemType=="Versions");
             }
         }
 
@@ -76,21 +75,22 @@ namespace Jellyfish.EventsAggregator
         {
             switch (prop.Name)
             {
-                case "enabled":
+                case "Enabled":
                     _current.Enabled &= prop.Value.ToString() == "True";
                     break;
-                case "versions":
-                case "ports":
-                case "instances":
-                    VisitArray(prop.Value.Value<JArray>(), prop.Name=="instances");
+                case "Versions":
+                case "Ports":
+                case "Instances":
+                    VisitArray(prop.Value.Value<JArray>(), prop.Name);
                     break;
-                case "id":
+                case "Id":
                     _current.Id = prop.Value.ToString();
+                    Console.WriteLine("Find instance " + _current.Id);
                     break;
-                case "ip":
+                case "Ip":
                     _current.Ip = prop.Value.ToString();
                     break;
-                case "boundedPort":
+                case "BoundedPort":
                     _current.Port = Int32.Parse(prop.Value.ToString());
                     break;
             }

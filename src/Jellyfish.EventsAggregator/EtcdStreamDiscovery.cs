@@ -32,12 +32,14 @@ namespace Jellyfish.EventsAggregator
 
         public EtcdStreamDiscovery()
         {
-            _etcd = Etcd.ClientFor(new Uri("http://local-etcd:2379"));
 #if DEBUG
-            _key = "/jellyfish/runtime/test/services";
+            _etcd = Etcd.ClientFor(new Uri("http://192.168.1.100:2379"));
+            _key = "/jellyfish/runtime/Local1/services";
 #else
+            _etcd = Etcd.ClientFor(new Uri("http://local-etcd:2379"));
             _key = "/jellyfish/runtime/" + Environment.MachineName + "/services";
 #endif
+            Console.WriteLine("Reading " + _key);
         }
 
         public IObservable<StreamAction> GetInstances()
@@ -74,12 +76,14 @@ namespace Jellyfish.EventsAggregator
             // Check instances
             foreach (var instance in runningInstances)
             {
+                Console.WriteLine($"check {instance.Id}");
                 string address;
                 if (_uris.TryGetValue(instance.Id, out address))
                 {
                     if (instance.Enabled == false)
                     {
                         observer.OnNext(new StreamAction(StreamAction.StreamActionType.REMOVE, address));
+                        Console.WriteLine($"remove {_uris[instance.Id]}");
                         _uris.Remove(instance.Id);
                     }
                 }
@@ -87,6 +91,7 @@ namespace Jellyfish.EventsAggregator
                 {
                     address = String.Format("http://{0}:{1}/jellyfish.stream", instance.Ip, instance.Port);
                     _uris.Add(instance.Id, address);
+                    Console.WriteLine($"add {_uris[instance.Id]}");
                     observer.OnNext(new StreamAction(StreamAction.StreamActionType.ADD, address));
                 }
             }
@@ -99,8 +104,10 @@ namespace Jellyfish.EventsAggregator
 
             foreach (var kv in instancesToRemove)
             {
-                if( _uris.Remove(kv.Key))
+                if( _uris.Remove(kv.Key)) {
+                    Console.WriteLine($"delete {_uris[kv.Key]}");
                     observer.OnNext(new StreamAction(StreamAction.StreamActionType.REMOVE, kv.Value));
+                }
             }
         }
     }

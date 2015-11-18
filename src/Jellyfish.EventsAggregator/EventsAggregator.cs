@@ -39,7 +39,7 @@ namespace Jellyfish.EventsAggregator
             var streams = request.Query["streams"];
             if( streams != null && streams.FirstOrDefault() != null)
             {
-                return new StaticStreamDiscovery(streams.First().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(uri=>uri.Trim()));
+                return new StaticStreamDiscovery(streams.Select(uri=>uri.Trim()));
             }
 
             return new EtcdStreamDiscovery();
@@ -92,8 +92,8 @@ namespace Jellyfish.EventsAggregator
 
                     var bytes = Encoding.UTF8.GetBytes(String.Format("data:{0}\n\n", JsonConvert.SerializeObject(data)));
                     ctx.Response.Body.Write(bytes, 0, bytes.Length);
+                    
                     await ctx.Response.Body.FlushAsync();
-
                     //   Console.WriteLine("Send data");
                 }
                 catch

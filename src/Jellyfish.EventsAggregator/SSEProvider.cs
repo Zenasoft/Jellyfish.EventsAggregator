@@ -60,7 +60,7 @@ namespace Jellyfish.EventsAggregator
                 {
                     try
                     {
-                        Console.WriteLine("Get info for " + address);
+                        //Console.WriteLine("Get info for " + address);
 
                         using (var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, token.Token).ConfigureAwait(false))
                         {
@@ -74,7 +74,7 @@ namespace Jellyfish.EventsAggregator
                                 {
                                     var data = DeserializeData(line.Substring("data: ".Length));
                                     data["instanceId"] =  uri.Authority.ToString();
-                                    Console.WriteLine($"{uri.Authority} -> {data["requestCount"]}");
+                                    //Console.WriteLine($"{uri.Authority} -> {data["requestCount"]}");
                                     observer.OnNext(data);
                                 }
 
@@ -90,7 +90,7 @@ namespace Jellyfish.EventsAggregator
                     }
                 }
 
-                Console.WriteLine("Completed for " + address);
+               // Console.WriteLine("Completed for " + address);
                 observer.OnCompleted();
             }));
         }
