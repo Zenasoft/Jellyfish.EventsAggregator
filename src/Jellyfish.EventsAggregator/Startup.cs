@@ -13,6 +13,7 @@
 //    Copyright (c) Zenasoft
 //
 using Microsoft.AspNet.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Framework.DependencyInjection;
 
 namespace Jellyfish.EventsAggregator

@@ -85,7 +85,7 @@ namespace Jellyfish.EventsAggregator
                     break;
                 case "Id":
                     _current.Id = prop.Value.ToString();
-                    Console.WriteLine("Find instance " + _current.Id);
+                    //Console.WriteLine("Find instance " + _current.Id);
                     break;
                 case "Ip":
                     _current.Ip = prop.Value.ToString();

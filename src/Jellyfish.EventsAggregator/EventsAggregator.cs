@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using System.Reactive.Linq;
 using System.Text;
 using Microsoft.AspNet.Http;
+using System.Threading;
 
 namespace Jellyfish.EventsAggregator
 {
@@ -37,7 +38,7 @@ namespace Jellyfish.EventsAggregator
         private IStreamDiscovery CreateStreamDiscovery(HttpRequest request)
         {
             var streams = request.Query["streams"];
-            if( streams != null && streams.FirstOrDefault() != null)
+            if( streams.FirstOrDefault() != null)
             {
                 return new StaticStreamDiscovery(streams.Select(uri=>uri.Trim()));
             }
@@ -75,12 +76,15 @@ namespace Jellyfish.EventsAggregator
             var streamAdds = streamActions.Where(a => a.ActionType == StreamAction.StreamActionType.ADD);
             var streamRemoves = streamActions.Where(a => a.ActionType == StreamAction.StreamActionType.REMOVE);
 
-            var streams = streamAdds.Select(action => SSEProvider.ReceiveSse(action.Uri, ctx.Request, ctx.RequestAborted, streamRemoves))
+            var token = new CancellationTokenSource();
+            token = ctx.RequestAborted != null ? CancellationTokenSource.CreateLinkedTokenSource( ctx.RequestAborted, token.Token ) : token;
+
+            var streams = streamAdds.Select(action => SSEProvider.ReceiveSse(action.Uri, ctx.Request, token, streamRemoves))
                                     .Merge();
 
             IObservable<IDictionary<string, object>> agreg = AggregateStreams(streams);
 
-            //    Console.WriteLine("Start request");
+            //Console.WriteLine("Start request");
             var stop = false;
             var subscription = agreg.Subscribe(async data =>
             {
@@ -103,17 +107,31 @@ namespace Jellyfish.EventsAggregator
                 catch
                 {
                     stop = true;
-                    // Console.WriteLine("Stop request");
+                    //Console.WriteLine("Stop request");
                 }
             });
 
             do
             {
+                // TODO remove this on rc2 when issue https://github.com/aspnet/KestrelHttpServer/issues/297 will be closed
+                try
+                {
+                    await ctx.Response.Body.FlushAsync();
+                }
+                catch
+                {
+                    stop = true;
+                    break;
+                }
+                // END 
                 await Task.Delay(1000);
             }
             while (!stop && !ctx.RequestAborted.IsCancellationRequested);
 
-            //      Console.WriteLine("End request");
+            //Console.WriteLine("End request");
+            if(!ctx.RequestAborted.IsCancellationRequested)
+                token.Cancel();
+
             subscription.Dispose();
         }
 

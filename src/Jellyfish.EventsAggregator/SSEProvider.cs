@@ -38,20 +38,18 @@ namespace Jellyfish.EventsAggregator
             }
         }
 
-        public static IObservable<IDictionary<string, object>> ReceiveSse(string address, HttpRequest origin, CancellationToken requestToken, IObservable<StreamAction> streamRemoved)
+        public static IObservable<IDictionary<string, object>> ReceiveSse(string address, HttpRequest origin, CancellationTokenSource token, IObservable<StreamAction> streamRemoved)
         {
             return Observable.Create<IDictionary<string, object>>((Func<IObserver<IDictionary<string, object>>, Task>)(async (IObserver<IDictionary<string, object>> observer) =>
             {
-                var streamToken = new CancellationTokenSource();
                 var subscription = streamRemoved.Where(a => a.Uri == address).Subscribe(o => {
-                    streamToken.Cancel();
+                    token.Cancel();
                 });
-                var token = requestToken != null ? CancellationTokenSource.CreateLinkedTokenSource(requestToken, streamToken.Token) : streamToken;
 
                 var client = new HttpClient();
                 var builder = new UriBuilder(address);
                 if (origin != null)
-                    builder.Query = origin.QueryString.ToString();
+                    builder.Query = origin.QueryString.Value?.Substring(1);
                 var uri = builder.Uri;
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
@@ -85,12 +83,12 @@ namespace Jellyfish.EventsAggregator
                     catch(Exception ex)
                     {
                         if (IsSocketException(ex) || token.IsCancellationRequested) break;
-                        Console.WriteLine("Error waiting 10 sec for " + address);
+                        //Console.WriteLine("Error waiting 10 sec for " + address);
                         await Task.Delay(TimeSpan.FromSeconds(10));
                     }
                 }
 
-               // Console.WriteLine("Completed for " + address);
+                //Console.WriteLine("Completed for " + address);
                 observer.OnCompleted();
             }));
         }

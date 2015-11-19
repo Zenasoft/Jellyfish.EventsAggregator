@@ -39,7 +39,7 @@ namespace Jellyfish.EventsAggregator
             _etcd = Etcd.ClientFor(new Uri("http://local-etcd:2379"));
             _key = "/jellyfish/runtime/" + Environment.MachineName + "/services";
 #endif
-            Console.WriteLine("Reading " + _key);
+            //Console.WriteLine("Reading " + _key);
         }
 
         public IObservable<StreamAction> GetInstances()
@@ -76,7 +76,7 @@ namespace Jellyfish.EventsAggregator
             // Check instances
             foreach (var instance in runningInstances)
             {
-                Console.WriteLine($"check {instance.Id}");
+                //Console.WriteLine($"check {instance.Id}");
                 string address;
                 if (_uris.TryGetValue(instance.Id, out address))
                 {
