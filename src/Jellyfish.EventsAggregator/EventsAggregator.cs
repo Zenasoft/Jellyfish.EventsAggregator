@@ -61,6 +61,10 @@ namespace Jellyfish.EventsAggregator
 
             var streamDiscovery = CreateStreamDiscovery(ctx.Request);
 
+            var origin = ctx.Request.Headers["Origin"].FirstOrDefault();
+            if( origin != null)
+                ctx.Response.Headers.Add("Access-Control-Allow-Origin",new string[] { origin} );
+                
             ctx.Response.ContentType = "text/event-stream";
             ctx.Response.Headers.Add("Connection", new string[] { "keep-alive" });
             ctx.Response.Headers.Add("Cache-control", new string[] { "no-cache" });

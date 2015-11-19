@@ -4,7 +4,7 @@ FROM microsoft/aspnet:1.0.0-beta8
 ENV MONO_THREADS_PER_CPU 2000
 EXPOSE 5050
 
-# Copy 'dnu publish' result
+# Copy 'dnu publish --configuration release' result
 COPY bin/output /app
 WORKDIR /app
 
