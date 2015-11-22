@@ -52,7 +52,7 @@ namespace Jellyfish.EventsAggregator
                     builder.Query = origin.QueryString.Value?.Substring(1);
                 var uri = builder.Uri;
 
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(1));
 
                 while (true)
                 {

@@ -1,4 +1,4 @@
-FROM microsoft/aspnet:1.0.0-beta8
+FROM microsoft/aspnet:1.0.0-rc1-final
 
 # Prevent `dnu restore` from stalling (gh#63, gh#80)
 ENV MONO_THREADS_PER_CPU 2000

@@ -37,7 +37,7 @@ namespace Jellyfish.EventsAggregator
             _key = "/jellyfish/runtime/Local1/services";
 #else
             _etcd = Etcd.ClientFor(new Uri("http://local-etcd:2379"));
-            _key = "/jellyfish/runtime/" + Environment.MachineName + "/services";
+            _key = "/jellyfish/runtime/" + Environment.GetEnvironmentVariable("JELLYFISH_CLUSTER") + "/services";
 #endif
             //Console.WriteLine("Reading " + _key);
         }

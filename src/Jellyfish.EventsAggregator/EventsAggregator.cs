@@ -63,12 +63,17 @@ namespace Jellyfish.EventsAggregator
             var streamDiscovery = CreateStreamDiscovery(ctx.Request);
 
             var origin = ctx.Request.Headers["Origin"].FirstOrDefault();
-            if( origin != null)
-                ctx.Response.Headers.Add("Access-Control-Allow-Origin",new string[] { origin} );
-                
+            if(origin != null)
+            {
+
+                ctx.Response.Headers.Add( "Access-Control-Expose-Headers", new string[] { "*" } );
+                ctx.Response.Headers.Add( "Access-Control-Allow-Credentials", new string[] { "true" } );
+                ctx.Response.Headers.Add( "Access-Control-Allow-Origin", new string[] { origin } );
+            }  
+
             ctx.Response.ContentType = "text/event-stream";
             ctx.Response.Headers.Add("Connection", new string[] { "keep-alive" });
-            ctx.Response.Headers.Add("Cache-control", new string[] { "no-cache" });
+      //      ctx.Response.Headers.Add("Cache-control", new string[] { "no-cache" });
             ctx.Response.StatusCode = 200;
             await ctx.Response.Body.FlushAsync();
 
@@ -98,7 +103,7 @@ namespace Jellyfish.EventsAggregator
                         data["type"] = "HystrixCommand";
                     }
 
-                    var bytes = Encoding.UTF8.GetBytes(String.Format("data:{0}\n\n", JsonConvert.SerializeObject(data)));
+                    var bytes = Encoding.UTF8.GetBytes(String.Format( "data:{0}\n\n", JsonConvert.SerializeObject(data)));
                     ctx.Response.Body.Write(bytes, 0, bytes.Length);
                     
                     await ctx.Response.Body.FlushAsync();
