@@ -11,8 +11,7 @@
     "Draft": "1.0.0"
   },
   "commands": {
-    "kestrel": "Microsoft.AspNet.Hosting --server=Microsoft.AspNet.Server.Kestrel --config hosting.ini",
-    "web": "Microsoft.AspNet.Server.Kestrel"
+    "kestrel": "Microsoft.AspNet.Hosting --server=Microsoft.AspNet.Server.Kestrel --config hosting.ini"
   },
 
   "frameworks": {
