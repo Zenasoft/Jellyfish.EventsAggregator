@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace Jellyfish.EventsAggregator
 {
@@ -28,7 +29,7 @@ namespace Jellyfish.EventsAggregator
             _uris = uris.ToArray();
         }
         
-        public IObservable<StreamAction> GetInstances()
+        public IObservable<StreamAction> GetInstances(CancellationToken token)
         {
             return _uris.Select(u => new StreamAction(StreamAction.StreamActionType.ADD, u)).ToObservable();
         }

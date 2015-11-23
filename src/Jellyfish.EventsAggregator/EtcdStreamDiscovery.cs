@@ -30,21 +30,21 @@ namespace Jellyfish.EventsAggregator
         private string _key;
         private long _processing;
 
-        public EtcdStreamDiscovery()
+        public EtcdStreamDiscovery(string cluster)
         {
 #if DEBUG
             _etcd = Etcd.ClientFor(new Uri("http://192.168.1.100:2379"));
-            _key = "/jellyfish/runtime/Local";
+            _key = "/jellyfish/runtime/" + (cluster ?? "Local");
 #else
             _etcd = Etcd.ClientFor(new Uri("http://local-etcd:2379"));
-            _key = "/jellyfish/runtime/" + Environment.GetEnvironmentVariable("JELLYFISH_CLUSTER");
+            _key = "/jellyfish/runtime/" + (cluster ?? Environment.GetEnvironmentVariable("JELLYFISH_CLUSTER"));
 #endif
             //Console.WriteLine("Reading " + _key);
         }
 
-        public IObservable<StreamAction> GetInstances()
+        public IObservable<StreamAction> GetInstances(CancellationToken token)
         {
-            IDisposable subscription;
+            IDisposable subscription = null;
             return Observable.Create<StreamAction>(async (observer) =>
             {
                 try
@@ -58,9 +58,16 @@ namespace Jellyfish.EventsAggregator
 
                 subscription = _etcd.Watch(_key).WithRecursive(true).Subscribe((IKeyEvent e) =>
                 {
+                    if( token.IsCancellationRequested)
+                    {
+                        subscription.Dispose();
+                        return;
+                    }
+
                     if (Interlocked.CompareExchange(ref _processing, 1, 0) == 0)
                     {
-                        ProcessInstances(observer, e);
+                        // TODO
+                     //   ProcessInstances(observer, e);
                         Interlocked.Exchange(ref _processing, 0);
                     }
                 });
@@ -71,7 +78,7 @@ namespace Jellyfish.EventsAggregator
 
         private void ProcessInstances(IObserver<StreamAction> observer, IKeyEvent e)
         {
-            IEnumerable<Item> runningInstances = InstancesParser.GetInstances(e.Data?.RawValue);
+            IEnumerable<Item> runningInstances = InstancesParser.GetInstances(e.Data?.Children);
 
             // Check instances
             foreach (var instance in runningInstances)
@@ -105,7 +112,7 @@ namespace Jellyfish.EventsAggregator
             foreach (var kv in instancesToRemove)
             {
                 if( _uris.Remove(kv.Key)) {
-                    Console.WriteLine($"delete {_uris[kv.Key]}");
+                    Console.WriteLine($"delete {kv.Value}");
                     observer.OnNext(new StreamAction(StreamAction.StreamActionType.REMOVE, kv.Value));
                 }
             }

@@ -48,8 +48,8 @@ namespace Jellyfish.EventsAggregator
 
                 var client = new HttpClient();
                 var builder = new UriBuilder(address);
-                if (origin != null)
-                    builder.Query = origin.QueryString.Value?.Substring(1);
+                if(!String.IsNullOrWhiteSpace( origin.QueryString.Value))
+                    builder.Query = origin.QueryString.Value.Substring(1);
                 var uri = builder.Uri;
 
                 await Task.Delay(TimeSpan.FromSeconds(1));

@@ -43,7 +43,8 @@ namespace Jellyfish.EventsAggregator
                 return new StaticStreamDiscovery(streams.Select(uri=>uri.Trim()));
             }
 
-            return new EtcdStreamDiscovery();
+            var cluster = request.Query["cluster"].FirstOrDefault();
+            return new EtcdStreamDiscovery(cluster);
         }
 
         public async Task Invoke(HttpContext ctx)
@@ -77,14 +78,14 @@ namespace Jellyfish.EventsAggregator
             ctx.Response.StatusCode = 200;
             await ctx.Response.Body.FlushAsync();
 
-            var streamActions = streamDiscovery.GetInstances().Publish().RefCount();
+            var token = new CancellationTokenSource();
+
+            var streamSubscription = streamDiscovery.GetInstances(token.Token);
+            var streamActions = streamSubscription.Publish().RefCount();
             var streamAdds = streamActions.Where(a => a.ActionType == StreamAction.StreamActionType.ADD);
             var streamRemoves = streamActions.Where(a => a.ActionType == StreamAction.StreamActionType.REMOVE);
 
-            var token = new CancellationTokenSource();
-            token = ctx.RequestAborted != null ? CancellationTokenSource.CreateLinkedTokenSource( ctx.RequestAborted, token.Token ) : token;
-
-            var streams = streamAdds.Select(action => SSEProvider.ReceiveSse(action.Uri, ctx.Request, token, streamRemoves))
+            var streams = streamAdds.Select(action => SSEProvider.ReceiveSse(action.Uri, ctx.Request, CancellationTokenSource.CreateLinkedTokenSource( ctx.RequestAborted, token.Token ), streamRemoves))
                                     .Merge();
 
             IObservable<IDictionary<string, object>> agreg = AggregateStreams(streams);
@@ -134,8 +135,7 @@ namespace Jellyfish.EventsAggregator
             while (!stop && !ctx.RequestAborted.IsCancellationRequested);
 
             //Console.WriteLine("End request");
-            if(!ctx.RequestAborted.IsCancellationRequested)
-                token.Cancel();
+            token.Cancel();
 
             subscription.Dispose();
         }

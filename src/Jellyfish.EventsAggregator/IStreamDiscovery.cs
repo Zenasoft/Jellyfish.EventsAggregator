@@ -13,11 +13,12 @@
 //    Copyright (c) Zenasoft
 //
 using System;
+using System.Threading;
 
 namespace Jellyfish.EventsAggregator
 {
     interface IStreamDiscovery
     {
-        IObservable<StreamAction> GetInstances();
+        IObservable<StreamAction> GetInstances(CancellationToken token);
     }
 }

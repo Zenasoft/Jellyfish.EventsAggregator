@@ -12,6 +12,7 @@
 //
 //    Copyright (c) Zenasoft
 //
+using Draft.Responses;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -33,14 +34,25 @@ namespace Jellyfish.EventsAggregator
         private static Item _current;
         private static bool _versionEnabled;
 
-        public static IEnumerable<Item> GetInstances(string json)
+        public static IEnumerable<Item> GetInstances(IKeyData[] hosts)
         {
-            if(json== null)
+            if(hosts == null)
                 return Enumerable.Empty<Item>();
 
             _items = new List<Item>();
-            var jarray = JToken.Parse(json);
-            VisitArray(jarray.Value<JArray>());
+            foreach(var hostNode in hosts)
+            {
+                var segments = hostNode.Key.Split( '/' );
+                if(segments.Length != 5 || segments[4] == "refresh")
+                    continue;
+
+                var json = hostNode.Children?.FirstOrDefault( n => n.Key.EndsWith( "/services" ) )?.RawValue;
+                if(json == null)
+                    continue;
+
+                var jarray = JToken.Parse( json );
+                VisitArray( jarray.Value<JArray>() );
+            }
             return _items;
         }
 
