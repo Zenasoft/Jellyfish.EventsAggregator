@@ -72,8 +72,8 @@ namespace Jellyfish.EventsAggregator
                 ctx.Response.Headers.Add( "Access-Control-Allow-Origin", new string[] { origin } );
             }  
 
-            ctx.Response.ContentType = "text/event-stream";
-            ctx.Response.Headers.Add("Connection", new string[] { "keep-alive" });
+            ctx.Response.ContentType = "text/event-stream;charset=UTF-8";
+       //     ctx.Response.Headers.Add("Connection", new string[] { "keep-alive" });
       //      ctx.Response.Headers.Add("Cache-control", new string[] { "no-cache" });
             ctx.Response.StatusCode = 200;
             await ctx.Response.Body.FlushAsync();
